@@ -77,7 +77,7 @@ void loop(){
 		
 			if(Serial1.available() >16){ //R frame is 17 bytes long with checksum so lets wait until it gets there
 				
-				uint8_t serBuffer[17];
+				uint8_t serBuffer[16];
 				uint8_t crc =0;
 				
 				for(int i = 0; i < 16; i++){

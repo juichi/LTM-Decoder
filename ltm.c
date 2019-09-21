@@ -15,15 +15,22 @@
 uint8_t state;
 uint8_t c;
 uint16_t rcChannels[16]; 
+long bailout;
 
 void setup(){
 	Serial.begin(115200);
 	Serial1.begin(9600);
 	state = 0;
+	bailout = millis();
 }
 
 void loop(){
 	
+	//bailout timer
+	if(bailout - millis() > 3000 && state !=0){
+		state = 0;
+	}
+		
 	switch(state) {
 		
 		case 0: //idle and serial clearing 
@@ -32,6 +39,7 @@ void loop(){
 				c = Serial1.read();
 					if(char(c) == '$'){
 						state = 1;
+						bailout = millis();
 					}
 			}
 			
@@ -43,6 +51,7 @@ void loop(){
 				c = Serial1.read();
 					if(char(c) == 'T'){ //valid frame
 						state = 2;
+						bailout = millis();
 					}
 					else{
 						state = 0; //Nope, back to square 1
@@ -57,9 +66,11 @@ void loop(){
 				c = Serial1.read();
 					if(char(c) == 'R'){ //RX frame
 						state 3;
+						bailout = millis();
 					}
 					else if(char(c) == 'T'){
 						state = 4;
+						bailout = millis();
 					}
 					else {
 						state = 0;
@@ -76,7 +87,7 @@ void loop(){
 		case 3:
 		
 			if(Serial1.available() >16){ //R frame is 17 bytes long with checksum so lets wait until it gets there
-				
+				bailout = millis();
 				uint8_t serBuffer[16];
 				uint8_t crc =0;
 				
@@ -142,7 +153,7 @@ void loop(){
 		case 4:
 		
 			if(Serial1.available() >16){ //T frame is 17 bytes long with checksum so lets wait until it gets there
-				
+				bailout = millis();
 				for(int i = 8; i <= 15; i++){
 					rcChannels[i] = Serial1.read();
 					rcChannels[i] |= Serial1.read() << 8;
